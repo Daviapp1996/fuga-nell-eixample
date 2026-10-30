@@ -48,6 +48,15 @@ I file grezzi (`osm/`, `orto_tiles/`, `eixample.json`, `map_rot.json`) non sono 
 - Piccioni: 4 comportamenti (`chase`, `ahead`, `pincer`, `shy`), percorso minimo con Dijkstra
   (risultati in cache), fasi alternate di dispersione (6 s) e inseguimento (20 s).
 - Churros sui luoghi famosi: i piccioni diventano vulnerabili; se presi volano al nido sopra i tetti.
+- **Modalità**: oggetto `MODES` (`chase` = fuga dai piccioni, `ctf` = ruba bandiera). Ogni modalità ha
+  `init`, `update`, `drawWorld`, `drawEntities`, `mini`, `hud`/`hudHTML`, `hint`, `legend`, `pauseText`;
+  il motore comune (grafo, movimento, camera, mappa, bussola) le chiama. La scelta è salvata in localStorage.
+- **Scatto** (Spazio/Shift o ⚡ su telefono): `tryDash`, vale per tutti i personaggi (anche CPU).
+- **Ruba bandiera** (`CTF`, `TEAMS`, `ROSTER`): 3 contro 3, Llobregat (sud, Kiko + 2 CPU) contro Besòs (nord, 3 CPU).
+  Basi scelte con `setBases`; la metà campo si decide con `sideOf` (chi è nella propria metà prende l'avversario).
+  I personaggi CPU usano `stepAI` (percorso minimo verso `goal = {e,s}`, evitando gli incroci presidiati)
+  e `ctfThink` (ruoli `att`/`def`/`flex`). I parametri in `CTF` sono stati bilanciati con partite CPU contro CPU:
+  se cambi basi o parametri, rifai la prova (la metà sud, verso Gran Via, è più facile da attaccare).
 - Skin: oggetto `SKINS` (colori corpo, cappellino, visiera, scarpe; `tiles:true` per il motivo trencadís).
   Per una nuova skin basta aggiungere una voce. La scelta è salvata in localStorage.
 - Due viste: `sat` (foto aerea, predefinita) e `night` (mappa vettoriale scura). Tasto V.

@@ -33,20 +33,25 @@ canvas#game{position:absolute;inset:0;width:100%;height:100%;display:block}
   background:linear-gradient(var(--panel),rgba(10,14,29,0));pointer-events:none}
 .stat{display:flex;flex-direction:column;line-height:1.05;min-width:64px}
 .stat b{font-family:var(--display);font-size:20px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);text-shadow:0 1px 3px rgba(0,0,0,.9)}
 #lives{display:flex;gap:4px;align-items:center}
 #lives i{width:14px;height:14px;border-radius:50%;background:var(--skin,#5fd4ff);box-shadow:0 0 8px var(--skin,#5fd4ff)}
+#stats{display:contents}
+.dashbar{width:56px;height:8px;border-radius:4px;background:rgba(255,255,255,.15);margin:7px 0 5px;overflow:hidden}
+.dashbar i{display:block;height:100%;width:100%;border-radius:4px;background:var(--tile)}
+.dashbar.ready i{box-shadow:0 0 8px var(--tile)}
 #hud .spacer{flex:1}
 .btn{pointer-events:auto;font-family:var(--ui);font-weight:700;font-size:14px;color:var(--ink);background:rgba(255,255,255,.07);
   border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 12px;cursor:pointer}
 .btn:hover{background:rgba(255,255,255,.14)}
 .btn:focus-visible{outline:2px solid var(--street);outline-offset:2px}
 #where{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
-  font-size:13px;letter-spacing:.04em;color:var(--muted);pointer-events:none;max-width:60vw}
+  font-size:13px;letter-spacing:.04em;color:var(--muted);pointer-events:none;max-width:60vw;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.8)}
 #where b{color:var(--ink);font-weight:600}
 #mini{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
   width:150px;height:150px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(10,14,29,.75)}
 #zoom{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(176px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}
+#zoom .btn,#dashBtn{background:rgba(12,17,36,.75)}
 #zoom .btn{width:40px;height:40px;padding:0;font-size:20px}
 #pad{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(44px + env(safe-area-inset-bottom,0px));
   width:150px;height:150px;display:none}
@@ -54,6 +59,16 @@ canvas#game{position:absolute;inset:0;width:100%;height:100%;display:block}
   color:var(--ink);font-size:20px;touch-action:none}
 #pad .u{left:50px;top:0}#pad .d{left:50px;bottom:0}#pad .l{left:0;top:50px}#pad .r{right:0;top:50px}
 .touch #pad{display:block}
+#dashBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(276px + env(safe-area-inset-bottom,0px));
+  width:64px;height:64px;border-radius:50%;padding:0;font-size:24px;display:none}
+.touch #dashBtn{display:block}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);cursor:pointer;color:var(--ink);font-family:var(--display);font-size:15px}
+.mode small{font-family:var(--ui);font-size:12px;color:var(--muted);line-height:1.3}
+.mode[aria-pressed="true"]{border-color:var(--tile);background:rgba(255,207,90,.1)}
+.mode:focus-visible{outline:2px solid var(--street)}
+.row{display:flex;gap:8px}.row .play{flex:1}
 .touch #where{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
 #overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(6,9,20,.62);backdrop-filter:blur(2px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow:auto}
@@ -78,7 +93,7 @@ kbd{font-family:var(--ui);font-size:12px;border:1px solid rgba(255,255,255,.25);
   text-shadow:0 0 14px rgba(255,207,90,.6);pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
 .credit{font-size:11px;color:var(--muted)}
 .credit a{color:var(--street)}
-@media (max-width:520px){#mini{width:110px;height:110px}#zoom{bottom:calc(136px + env(safe-area-inset-bottom,0px))}.stat b{font-size:17px}.stat{min-width:52px}}
+@media (max-width:520px){#mini{width:110px;height:110px}#zoom{bottom:calc(136px + env(safe-area-inset-bottom,0px))}#dashBtn{bottom:calc(236px + env(safe-area-inset-bottom,0px))}.stat b{font-size:17px}.stat{min-width:52px}}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 </style>
 </head>
@@ -88,10 +103,8 @@ kbd{font-family:var(--ui);font-size:12px;border:1px solid rgba(255,255,255,.25);
 <div id="wrap">
   <canvas id="game"></canvas>
   <div id="hud">
-    <div class="stat"><b id="score">0</b><span>Punti</span></div>
-    <div class="stat"><b id="left">0</b><span>Tessere</span></div>
-    <div class="stat"><b id="lvl">1</b><span>Livello</span></div>
-    <div class="stat"><div id="lives"></div><span>Vite</span></div>
+    <div id="stats"></div>
+    <div class="stat"><div class="dashbar" id="dashbar"><i></i></div><span>Scatto</span></div>
     <div class="spacer"></div>
     <button class="btn" id="viewBtn" type="button">Vista notte</button>
     <button class="btn" id="pauseBtn" type="button">Pausa</button>
@@ -100,6 +113,7 @@ kbd{font-family:var(--ui);font-size:12px;border:1px solid rgba(255,255,255,.25);
   <div id="where"></div>
   <div id="zoom"><button class="btn" id="zin" type="button" aria-label="Avvicina">+</button><button class="btn" id="zout" type="button" aria-label="Allontana">−</button></div>
   <canvas id="mini"></canvas>
+  <button class="btn" id="dashBtn" type="button" aria-label="Scatto">⚡</button>
   <div id="pad">
     <button class="u" data-d="u" type="button" aria-label="Su">▲</button>
     <button class="l" data-d="l" type="button" aria-label="Sinistra">◀</button>
@@ -228,31 +242,32 @@ function buildTiles(){
 }
 const TILE_COLORS=["#ffcf5a","#5fd4ff","#ff7a59","#7be38f","#f4f4f4"];
 
-/* ---------- game state ---------- */
-const PIGEONS_DEF=[
-  {name:"Pere",  color:"#9aa6c2", neck:"#58d68d", mode:"chase"},
-  {name:"Montse",color:"#c9b2d8", neck:"#d16ba5", mode:"ahead"},
-  {name:"Jordi", color:"#b9c4cf", neck:"#4fb3d9", mode:"pincer"},
-  {name:"Núria", color:"#d8c7a8", neck:"#e0a84f", mode:"shy"},
-];
+/* ---------- game state (shared) ---------- */
+let modeId = "chase";
+try{ const m = localStorage.getItem("eix_mode"); if (m==="chase"||m==="ctf") modeId = m; }catch(e){}
 let G=null;
+const M=()=>MODES[G.mode];
 function newGame(){
-  G={score:0,lives:3,level:1,state:"menu",tiles:buildTiles(),churros:landmarks.map(l=>({...l,alive:true})),fx:[],t:0};
-  resetPositions();
-}
-function speedBase(){return 78+G.level*4}
-function resetPositions(){
-  const st=adj[START][0];
-  G.player={e:st.ei,s:st.dir>0?0:edges[st.ei].len,dir:st.dir,want:[0,-1],moving:false,heading:[0,-1],anim:0,dead:0};
-  G.pigeons=PIGEONS_DEF.map((d,i)=>{const o=adj[NEST][i%adj[NEST].length];
-    return {...d,e:o.ei,s:o.dir>0?0:edges[o.ei].len,dir:o.dir,release:1.5+i*3.2,state:"wait",fly:null,flap:Math.random()*6,dist:null,last:0,tgt:-1,heading:[1,0]};});
-  G.fright=0; G.phaseT=0; G.combo=0; G.ready=1.6;
-  cam.x=pos(G.player)[0]; cam.y=pos(G.player)[1];
+  G={mode:modeId,state:"menu",fx:[],t:0,score:0};
+  M().init();
+  document.getElementById("stats").innerHTML=M().hudHTML();
 }
 function pos(ent){return posOn(edges[ent.e],ent.s)}
+function entPos(ent){return ent.out?ent.out.p:pos(ent)}
 function headingOf(ent){return tangent(edges[ent.e],ent.s,ent.dir)}
 function nodeAhead(ent){const e=edges[ent.e];return ent.dir>0?e.b:e.a}
 function nodeBehind(ent){const e=edges[ent.e];return ent.dir>0?e.a:e.b}
+function nodeGoal(n){const o=adj[n][0];return {e:o.ei,s:o.dir>0?0:edges[o.ei].len}}
+function placeAt(ent,node,k){ // k-th slot around a node, a few metres out along its streets
+  const L=adj[node].length,o=adj[node][k%L],len=edges[o.ei].len,off=Math.min(len*0.45,6+7*Math.floor(k/L));
+  ent.e=o.ei;ent.dir=o.dir;ent.s=o.dir>0?off:len-off;
+}
+
+/* ---------- dash (scatto): short burst, then cooldown ---------- */
+const DASH={time:0.9,cool:5,mult:1.6};
+function tryDash(ent){if(!ent||ent.cd>0||ent.out||ent.dead)return false;ent.dash=DASH.time;ent.cd=DASH.cool;return true}
+function tickDash(ent,dt){if(ent.dash>0)ent.dash-=dt;if(ent.cd>0)ent.cd-=dt}
+const dashMult=ent=>ent.dash>0?DASH.mult:1;
 
 /* ---------- movement ---------- */
 function stepPlayer(p,dist){
@@ -286,6 +301,46 @@ function tryTurn(p){ // when stopped at a node
   if(!best) return false;
   p.e=best.ei; p.dir=best.dir; p.s=best.dir>0?0:edges[best.ei].len; p.moving=true; return true;
 }
+const distCache=new Map();
+function distFrom(n){if(!distCache.has(n)){if(distCache.size>80)distCache.clear();distCache.set(n,dijkstra(n))}return distCache.get(n)}
+/* route length from any node to a point {e,s} on the graph */
+function goalDist(g){const e=edges[g.e],A=distFrom(e.a),B=distFrom(e.b);return n=>Math.min(A[n]+g.s,B[n]+e.len-g.s)}
+/* CPU players: follow the shortest path to ent.goal, turning back if that is quicker; stop on arrival */
+function stepAI(a,dist){
+  const g=a.goal; if(!g){a.moving=false;return}
+  a.moving=true; let guard=0;
+  while(dist>0&&guard++<20){
+    if(a.e===g.e){const d=g.s-a.s;if(d)a.dir=d>0?1:-1;if(Math.abs(d)<=dist){a.s=g.s;a.moving=false;return}a.s+=a.dir*dist;return}
+    const e=edges[a.e],gd=goalDist(g),toEnd=a.dir>0?e.len-a.s:a.s,toBack=e.len-toEnd;
+    if(gd(nodeBehind(a))+toBack<gd(nodeAhead(a))+toEnd-0.5){a.dir*=-1;continue}
+    if(dist<toEnd){a.s+=a.dir*dist;return}
+    dist-=toEnd;a.s=a.dir>0?e.len:0;
+    let pick=null,bd=Infinity;
+    for(const o of adj[nodeAhead(a)]){const L=edges[o.ei].len;let d=o.ei===g.e?(o.dir>0?g.s:L-g.s):L+gd(o.to);
+      if(a.avoid)for(const q of a.avoid)if(dist2(N[o.to],q)<CTF.avoidR)d+=CTF.avoidCost; // steer around guarded crossings
+      if(d<bd){bd=d;pick=o}}
+    a.e=pick.ei;a.dir=pick.dir;a.s=pick.dir>0?0:edges[pick.ei].len;
+  }
+}
+
+/* =====================================================================
+   MODE 1 — chase (fuga): collect tiles, run from the pigeons
+   ===================================================================== */
+const PIGEONS_DEF=[
+  {name:"Pere",  color:"#9aa6c2", neck:"#58d68d", mode:"chase"},
+  {name:"Montse",color:"#c9b2d8", neck:"#d16ba5", mode:"ahead"},
+  {name:"Jordi", color:"#b9c4cf", neck:"#4fb3d9", mode:"pincer"},
+  {name:"Núria", color:"#d8c7a8", neck:"#e0a84f", mode:"shy"},
+];
+function speedBase(){return 78+G.level*4}
+function resetPositions(){
+  const st=adj[START][0];
+  G.player={e:st.ei,s:st.dir>0?0:edges[st.ei].len,dir:st.dir,want:[0,-1],moving:false,heading:[0,-1],anim:0,dead:0,dash:0,cd:0};
+  G.pigeons=PIGEONS_DEF.map((d,i)=>{const o=adj[NEST][i%adj[NEST].length];
+    return {...d,e:o.ei,s:o.dir>0?0:edges[o.ei].len,dir:o.dir,release:1.5+i*3.2,state:"wait",fly:null,flap:Math.random()*6,dist:null,last:0,tgt:-1,heading:[1,0]};});
+  G.fright=0; G.phaseT=0; G.combo=0; G.ready=1.6;
+  cam.x=pos(G.player)[0]; cam.y=pos(G.player)[1];
+}
 function pigeonTarget(pg){
   const pp=pos(G.player), ph=G.player.heading;
   const [x0,y0,x1,y1]=MAP.play;
@@ -297,8 +352,6 @@ function pigeonTarget(pg){
     case "shy":{const q=pos(pg);return Math.hypot(q[0]-pp[0],q[1]-pp[1])>260? nodeAhead(G.player): nearestNode(x0,y1)}
   }
 }
-const distCache=new Map();
-function distFrom(n){if(!distCache.has(n)){if(distCache.size>80)distCache.clear();distCache.set(n,dijkstra(n))}return distCache.get(n)}
 function stepPigeon(pg,dist){
   let guard=0;
   while(dist>0&&guard++<20){
@@ -314,6 +367,83 @@ function stepPigeon(pg,dist){
   }
 }
 
+/* =====================================================================
+   MODE 2 — capture the flag (ruba bandiera): Llobregat vs Besòs, 3 v 3
+   ===================================================================== */
+const CTF={goal:3,time:300,carrySlow:1,botSpeed:0.94,tagR:11,grabR:14,homeR:18,dropTime:10,outWait:2.5,
+  defR:180,chaseR:75,avoidR:50,avoidCost:150}; // defR/chaseR: how far defenders / anyone chase intruders
+const TEAMS=[{name:"Llobregat",color:"#3d8bff"},{name:"Besòs",color:"#ff5a36"}];
+let AXIS,PERP,MID; // axis base→base, its perpendicular, and the midpoint where the halves split
+function setBases(b0,b1){
+  TEAMS[0].base=b0;TEAMS[1].base=b1;
+  AXIS=norm([N[b1][0]-N[b0][0],N[b1][1]-N[b0][1]]);PERP=[-AXIS[1],AXIS[0]];
+  MID=[(N[b0][0]+N[b1][0])/2,(N[b0][1]+N[b1][1])/2];
+}
+// Llobregat sits a bit further in: near Gran Via the many side lanes made that base too easy to raid (CPU-vs-CPU tests)
+setBases(nearestNode(PC[0]-vBesos[0]*345,PC[1]-vBesos[1]*345),nearestNode(PC[0]+vBesos[0]*430,PC[1]+vBesos[1]*430));
+const sideOf=p=>((p[0]-MID[0])*AXIS[0]+(p[1]-MID[1])*AXIS[1])<0?0:1; // which team's half a point is in
+const ROSTER=[ // team, name, role for CPU players (att = attacca, def = difende, flex = dipende dal punteggio)
+  [0,"Kiko",null],[0,"Laia","att"],[0,"Pau","def"],
+  [1,"Arnau","att"],[1,"Martina","flex"],[1,"Biel","def"],
+];
+const dist2=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+function ctfReset(){
+  const cnt=[0,0];
+  for(const p of G.players){placeAt(p,TEAMS[p.team].base,cnt[p.team]++);
+    Object.assign(p,{out:null,carry:null,dash:0,cd:0,goal:null,think:Math.random()*0.3,moving:false,patrol:null,
+      wp:p.role!=="def"?ctfFlank(p.team):null});
+    p.heading=headingOf(p);}
+  const sg=G.player.team===0?1:-1; G.player.want=[AXIS[0]*sg,AXIS[1]*sg]; // face the enemy base
+  G.flags=TEAMS.map((t,i)=>({team:i,state:"home",x:N[t.base][0],y:N[t.base][1],carrier:null,timer:0,goal:null}));
+  G.ready=1.6; G.waitMsg=0;
+  cam.x=pos(G.player)[0]; cam.y=pos(G.player)[1];
+}
+function ctfFlank(team){ // a waypoint on one side of the enemy half, so attackers don't all take the same street
+  const sgn=team===0?1:-1, side=Math.random()<0.5?-1:1, lat=140+Math.random()*180;
+  return nearestNode(MID[0]+AXIS[0]*sgn*150+PERP[0]*side*lat, MID[1]+AXIS[1]*sgn*150+PERP[1]*side*lat);
+}
+function ctfTag(p){ // p was caught: drops the flag and walks back to base
+  const q=pos(p);
+  if(p.carry){const f=p.carry;f.state="dropped";f.carrier=null;f.timer=CTF.dropTime;f.x=q[0];f.y=q[1];f.goal={e:p.e,s:p.s};p.carry=null;
+    if(f.team===0)toast("La nostra bandiera è a terra!");}
+  p.out={p:q,h:headingOf(p),wait:CTF.outWait}; p.dash=0; p.moving=false;
+  G.fx.push({x:q[0],y:q[1],txt:"PRESO!",c:TEAMS[1-p.team].color,life:1});
+  if(p===G.player)toast("Ti hanno preso! Torni alla base");
+}
+function ctfThink(b){
+  const me=b.team, foe=1-me, myF=G.flags[me], foeF=G.flags[foe], bp=pos(b);
+  const mates=G.players.filter(q=>q.team===me&&!q.out), foes=G.players.filter(q=>q.team!==me&&!q.out);
+  const rank=pt=>mates.filter(q=>q!==b&&dist2(pos(q),pt)<dist2(bp,pt)).length; // 0 = I'm the closest mate
+  const near=foes.map(q=>[q,dist2(pos(q),bp)]).sort((a,c)=>a[1]-c[1])[0];
+  const chase=q=>{b.goal={e:q.e,s:q.s};if(dist2(pos(q),bp)<40)tryDash(b)};
+  b.goal=null; b.avoid=sideOf(bp)===foe||b.carry?foes.map(q=>pos(q)):null;
+  if(b.carry){b.goal=nodeGoal(TEAMS[me].base);if(near&&near[1]<45)tryDash(b);return}
+  if(myF.state==="carried"&&rank([myF.x,myF.y])<2){chase(myF.carrier);return}
+  if(myF.state==="dropped"&&rank([myF.x,myF.y])===0){b.goal=myF.goal;return}
+  if(foeF.state==="dropped"&&rank([foeF.x,foeF.y])===0){b.goal=foeF.goal;return}
+  const role=b.role==="flex"?(G.pts[me]>G.pts[foe]?"def":"att"):b.role;
+  const intr=foes.filter(q=>sideOf(pos(q))===me).map(q=>[q,dist2(pos(q),bp)]).sort((a,c)=>a[1]-c[1])[0];
+  if(intr&&(intr[1]<CTF.chaseR||role==="def"&&intr[1]<CTF.defR)){chase(intr[0]);return}
+  if(role==="att"){
+    if(foeF.state==="carried"){b.goal=nodeGoal(TEAMS[me].base);return} // a mate has it: fall back and cover
+    if(sideOf(bp)===foe&&near&&near[1]<35)tryDash(b);
+    if(b.wp!=null){if(dist2(bp,N[b.wp])<30||sideOf(bp)===foe&&dist2(bp,N[TEAMS[foe].base])<220)b.wp=null;else{b.goal=nodeGoal(b.wp);return}}
+    b.goal=nodeGoal(TEAMS[foe].base);return;
+  }
+  if(b.patrol==null||G.t>b.patrolT){ // defender: wander between crossings near our flag
+    const B=N[TEAMS[me].base],opts=[];N.forEach((n,i)=>{if(dist2(n,B)<150&&sideOf(n)===me)opts.push(i)});
+    b.patrol=opts[Math.floor(Math.random()*opts.length)];b.patrolT=G.t+3+Math.random()*3;}
+  b.goal=nodeGoal(b.patrol);
+}
+function ctfObjective(){ // where the human should head: [x,y,color,label]
+  const me=G.player.team,myF=G.flags[me],foeF=G.flags[1-me];
+  if(G.player.carry){const n=N[TEAMS[me].base];return [n[0],n[1],TEAMS[me].color,"Porta la bandiera alla tua base!"]}
+  if(myF.state==="carried")return [myF.x,myF.y,TEAMS[me].color,"Ti hanno rubato la bandiera: fermali!"];
+  if(myF.state==="dropped")return [myF.x,myF.y,TEAMS[me].color,"Riprendi la tua bandiera a terra"];
+  if(foeF.state==="carried")return [foeF.x,foeF.y,TEAMS[me].color,"Proteggi chi porta la bandiera"];
+  return [foeF.x,foeF.y,TEAMS[1-me].color,"Ruba la bandiera di "+TEAMS[1-me].name];
+}
+
 /* ---------- input ---------- */
 const DIRS={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]};
 function setWant(k){if(!G||!G.player)return;G.player.want=DIRS[k].slice();if(G.state==="play"&&!G.player.moving)G.player.moving=true}
@@ -323,9 +453,11 @@ addEventListener("keydown",ev=>{
   if(ev.code==="KeyP"||ev.code==="Escape"){togglePause()}
   if(ev.code==="Equal"||ev.code==="NumpadAdd")zoomBy(1.25);
   if(ev.code==="Minus"||ev.code==="NumpadSubtract")zoomBy(0.8);
+  if((ev.code==="Space"||ev.code==="ShiftLeft"||ev.code==="ShiftRight")&&G.state==="play"){ev.preventDefault();tryDash(G.player);return}
   if((ev.code==="Enter"||ev.code==="Space")&&G.state!=="play"){const b=document.querySelector("#overlay .play");if(b){ev.preventDefault();b.click()}}
 });
 document.querySelectorAll("#pad button").forEach(b=>b.addEventListener("pointerdown",ev=>{ev.preventDefault();setWant(b.dataset.d)}));
+document.getElementById("dashBtn").addEventListener("pointerdown",ev=>{ev.preventDefault();if(G.state==="play")tryDash(G.player)});
 addEventListener("touchstart",()=>document.body.classList.add("touch"),{once:true,passive:true});
 
 /* swipe + pinch on canvas */
@@ -357,7 +489,7 @@ function resize(){DPR=Math.min(2.5,devicePixelRatio||1);W=innerWidth;H=innerHeig
 addEventListener("resize",resize);resize();
 
 /* ---------- drawing ---------- */
-function drawKiko(c,x,y,h,scale,skin,t,moving){
+function drawKiko(c,x,y,h,scale,skin,t,moving,cap){
   const S=SKINS[skin]||SKINS.notte;const ang=Math.atan2(h[1],h[0]);
   c.save();c.translate(x,y);c.rotate(ang);c.scale(scale,scale);
   const step=moving?Math.sin(t*18):0;
@@ -368,7 +500,7 @@ function drawKiko(c,x,y,h,scale,skin,t,moving){
   c.fillStyle=S.body;c.beginPath();c.arc(0,0,7.5,0,7);c.fill();c.shadowBlur=0;
   if(S.tiles){c.save();c.beginPath();c.arc(0,0,7.5,0,7);c.clip();const tc=["#3a7bd5","#d94848","#ffffff","#2fa36b"];
     for(let i=0;i<9;i++){c.fillStyle=tc[i%4];c.beginPath();const a=i*0.7,r=2+(i%3)*2;c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.lineTo(Math.cos(a+.5)*(r+2.5),Math.sin(a+.5)*(r+2.5));c.lineTo(Math.cos(a+.2)*(r+3),Math.sin(a+.2)*(r+3));c.fill()}c.restore()}
-  c.fillStyle=S.cap;c.beginPath();c.arc(-1,0,5.4,0,7);c.fill();           // cap
+  c.fillStyle=cap||S.cap;c.beginPath();c.arc(-1,0,5.4,0,7);c.fill();     // cap (team colour in ruba bandiera)
   c.fillStyle=S.visor;c.beginPath();c.ellipse(5.2,0,2.6,4.6,0,-Math.PI/2,Math.PI/2);c.fill(); // visor points forward
   c.restore();
 }
@@ -395,6 +527,26 @@ function drawChurro(c,x,y,scale,t){
   c.strokeStyle="#a4601a";c.lineWidth=0.8;for(let i=-7;i<=7;i+=2.4){c.beginPath();c.moveTo(i,-2.4);c.lineTo(i+1.4,2.4);c.stroke()}
   c.fillStyle="rgba(255,255,255,.75)";for(let i=0;i<6;i++){c.fillRect(-7+i*2.7,-1.6+(i%2)*1.6,0.8,0.8)}
   c.restore();
+}
+
+function drawFlag(c,x,y,color,scale,t){
+  c.save();c.translate(x,y);c.scale(scale,scale);
+  c.strokeStyle="#eaf1ff";c.lineWidth=1.4;c.beginPath();c.moveTo(0,3);c.lineTo(0,-18);c.stroke();
+  const w=Math.sin(t*6)*1.6;c.fillStyle=color;c.shadowColor=color;c.shadowBlur=10;
+  c.beginPath();c.moveTo(0,-18);c.quadraticCurveTo(6,-19+w,13,-14.5);c.quadraticCurveTo(6,-11-w,0,-10.5);c.closePath();c.fill();c.shadowBlur=0;
+  c.restore();
+}
+/* a Kiko-style runner (player or CPU), with dash trail and optional team ring */
+function drawRunner(c,p,o,skin,cap,ring){
+  const q=entPos(p),h=p.out?p.out.h:p.heading,es=o.es;
+  if(!o.vis(q[0],q[1]))return;
+  const a0=p.out?0.35:1;
+  if(p.dash>0){for(let k=3;k>=1;k--){c.globalAlpha=a0*0.14*(4-k);drawKiko(c,q[0]-h[0]*k*6*es,q[1]-h[1]*k*6*es,h,es,skin,o.t,true,cap)}}
+  c.globalAlpha=a0;
+  o.shadow(q[0],q[1],8*es,2.2*es);
+  if(ring){c.strokeStyle=ring;c.lineWidth=1.6*es;c.beginPath();c.ellipse(q[0],q[1]+1.5*es,11*es,9*es,0,0,7);c.stroke()}
+  drawKiko(c,q[0],q[1],h,es,skin,o.t,p.moving||!!p.out,cap);
+  c.globalAlpha=1;
 }
 
 function render(){
@@ -436,30 +588,17 @@ function render(){
   if(cam.z>1.15){const fs=Math.max(5.5,(sat?12:11)*px);ctx.font=`600 ${fs}px "Chakra Petch",sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
     ctx.lineWidth=3*px;ctx.strokeStyle="rgba(10,14,29,.85)";ctx.fillStyle=sat?"#ffffff":"rgba(200,215,255,.55)";
     for(const l of labels){if(!vis(l.x,l.y))continue;ctx.save();ctx.translate(l.x,l.y);ctx.rotate(l.ang);ctx.translate(0,-12);if(sat)ctx.strokeText(l.nm,0,0);ctx.fillText(l.nm,0,0);ctx.restore()}}
-  // tiles
-  const ts=Math.max(2.6,3.4*px*1.6);
-  ctx.lineWidth=Math.max(0.6,1.2*px);ctx.strokeStyle="rgba(10,14,29,.9)";
-  for(const tl of G.tiles){if(!tl.alive||!vis(tl.x,tl.y))continue;ctx.fillStyle=TILE_COLORS[tl.hue];ctx.save();ctx.translate(tl.x,tl.y);ctx.rotate(tl.hue*0.6+0.3);ctx.fillRect(-ts/2,-ts/2,ts,ts*0.8);if(sat)ctx.strokeRect(-ts/2,-ts/2,ts,ts*0.8);ctx.restore()}
+  const es=Math.max(1,1.5*px*1.3);
+  const shadow=(x,y,r,off)=>{ctx.fillStyle="rgba(0,0,0,.35)";ctx.beginPath();ctx.ellipse(x+off,y+off,r,r*0.8,0,0,7);ctx.fill()};
+  const o={t,px,vis,sat,es,shadow};
+  M().drawWorld(ctx,o);
   // landmarks names
-  const big=Math.max(1,1.6*px);
-  for(const c of G.churros){ if(c.alive&&vis(c.x,c.y)) drawChurro(ctx,c.x,c.y,big,t) }
   ctx.textAlign="center";ctx.font=`700 ${Math.max(7,12*px)}px "Chakra Petch",sans-serif`;ctx.lineWidth=3.5*px;ctx.strokeStyle="rgba(10,14,29,.9)";
   for(const l of MAP.landmarks){if(!vis(l.x,l.y))continue;const ly=l.y-Math.max(14,22*px);ctx.strokeText(l.name.toUpperCase(),l.x,ly);ctx.fillStyle=sat?"#ffd76a":"rgba(255,207,90,.8)";ctx.fillText(l.name.toUpperCase(),l.x,ly)}
-  // nest
-  const nn=N[NEST];ctx.strokeStyle="rgba(200,180,140,.45)";ctx.lineWidth=Math.max(1.5,2*px);ctx.beginPath();ctx.arc(nn[0],nn[1],16,0,7);ctx.stroke();
   // fx
   for(const f of G.fx){ctx.globalAlpha=Math.max(0,f.life);ctx.fillStyle=f.c;ctx.font=`700 ${Math.max(8,14*px)}px "Bungee",sans-serif`;ctx.fillText(f.txt,f.x,f.y-(1-f.life)*30);ctx.globalAlpha=1}
   // entities
-  const es=Math.max(1,1.5*px*1.3);
-  const shadow=(x,y,r,off)=>{ctx.fillStyle="rgba(0,0,0,.35)";ctx.beginPath();ctx.ellipse(x+off,y+off,r,r*0.8,0,0,7);ctx.fill()};
-  for(const pg of G.pigeons){let p,h;if(pg.fly){p=pg.fly.p;h=pg.fly.h}else{p=pos(pg);h=pg.state==="wait"?[Math.cos(t+pg.flap),Math.sin(t+pg.flap)]:headingOf(pg)}
-    if(!vis(p[0],p[1]))continue;
-    if(pg.fly){shadow(p[0],p[1],6*es,14*es);ctx.save();ctx.translate(p[0],p[1]);ctx.scale(1.25,1.25);drawPigeon(ctx,0,0,h,es,pg,t);ctx.restore()}
-    else{shadow(p[0],p[1],7*es,2*es);drawPigeon(ctx,p[0],p[1],h,es,pg,t)}}
-  const pp=pos(G.player);
-  if(!G.player.dead)shadow(pp[0],pp[1],8*es,2.2*es);
-  if(G.player.dead>0){ctx.save();ctx.globalAlpha=Math.max(0,1-G.player.dead/1.4);drawKiko(ctx,pp[0],pp[1],[Math.cos(G.player.dead*14),Math.sin(G.player.dead*14)],es*(1+G.player.dead),skinId,t,false);ctx.restore()}
-  else drawKiko(ctx,pp[0],pp[1],G.player.heading,es,skinId,t,G.player.moving);
+  M().drawEntities(ctx,o);
   // compass (screen space)
   ctx.setTransform(DPR,0,0,DPR,0,0);
   const cx=W-48-(W<=520?2:0), cy=(W<=520?118:96);
@@ -468,7 +607,76 @@ function render(){
   const lab=(v,txt,col)=>{ctx.fillStyle=col;ctx.fillText(txt,cx+v[0]*20,cy+v[1]*20)};
   lab(vMunt,"MUNT","#c9d6ff");lab([-vMunt[0],-vMunt[1]],"MAR","#5fd4ff");lab(vBesos,"BESÒS","#8c9bc4");lab([-vBesos[0],-vBesos[1]],"LLOB","#8c9bc4");
   ctx.strokeStyle="#ff5c8a";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+vN[0]*11,cy+vN[1]*11);ctx.stroke();
+  if(M().drawScreen)M().drawScreen(ctx);
   if(G.ready>0&&G.state==="play"){ctx.font='26px "Bungee",sans-serif';ctx.fillStyle="#ffcf5a";ctx.fillText("PRONTI!",W/2,H/2-60)}
+}
+
+/* chase layers */
+function chaseWorld(c,o){
+  const ts=Math.max(2.6,3.4*o.px*1.6);
+  c.lineWidth=Math.max(0.6,1.2*o.px);c.strokeStyle="rgba(10,14,29,.9)";
+  for(const tl of G.tiles){if(!tl.alive||!o.vis(tl.x,tl.y))continue;c.fillStyle=TILE_COLORS[tl.hue];c.save();c.translate(tl.x,tl.y);c.rotate(tl.hue*0.6+0.3);c.fillRect(-ts/2,-ts/2,ts,ts*0.8);if(o.sat)c.strokeRect(-ts/2,-ts/2,ts,ts*0.8);c.restore()}
+  const big=Math.max(1,1.6*o.px);
+  for(const ch of G.churros){ if(ch.alive&&o.vis(ch.x,ch.y)) drawChurro(c,ch.x,ch.y,big,o.t) }
+  const nn=N[NEST];c.strokeStyle="rgba(200,180,140,.45)";c.lineWidth=Math.max(1.5,2*o.px);c.beginPath();c.arc(nn[0],nn[1],16,0,7);c.stroke();
+}
+function chaseEntities(c,o){
+  const t=o.t,es=o.es;
+  for(const pg of G.pigeons){let p,h;if(pg.fly){p=pg.fly.p;h=pg.fly.h}else{p=pos(pg);h=pg.state==="wait"?[Math.cos(t+pg.flap),Math.sin(t+pg.flap)]:headingOf(pg)}
+    if(!o.vis(p[0],p[1]))continue;
+    if(pg.fly){o.shadow(p[0],p[1],6*es,14*es);c.save();c.translate(p[0],p[1]);c.scale(1.25,1.25);drawPigeon(c,0,0,h,es,pg,t);c.restore()}
+    else{o.shadow(p[0],p[1],7*es,2*es);drawPigeon(c,p[0],p[1],h,es,pg,t)}}
+  const P=G.player,pp=pos(P);
+  if(P.dead>0){c.save();c.globalAlpha=Math.max(0,1-P.dead/1.4);drawKiko(c,pp[0],pp[1],[Math.cos(P.dead*14),Math.sin(P.dead*14)],es*(1+P.dead),skinId,t,false);c.restore()}
+  else drawRunner(c,P,o,skinId);
+}
+function chaseMini(m,s){
+  m.fillStyle="#ffcf5a";for(const t of G.tiles)if(t.alive)m.fillRect(t.x-1.2/s,t.y-1.2/s,2.4/s,2.4/s);
+  for(const c of G.churros)if(c.alive){m.fillStyle="#ff9d3b";m.beginPath();m.arc(c.x,c.y,3.4/s,0,7);m.fill()}
+  for(const pg of G.pigeons){const p=pg.fly?pg.fly.p:pos(pg);m.fillStyle=pg.state==="fright"?"#9db4ff":"#ff5c8a";m.beginPath();m.arc(p[0],p[1],3/s,0,7);m.fill()}
+  const p=pos(G.player);m.fillStyle=SKINS[skinId].body;m.beginPath();m.arc(p[0],p[1],4.2/s,0,7);m.fill();
+}
+
+/* capture-the-flag layers */
+function ctfWorld(c,o){
+  const [x0,y0,x1,y1]=MAP.play;
+  c.save();c.beginPath();c.rect(x0-12,y0-12,x1-x0+24,y1-y0+24);c.clip();
+  c.translate(MID[0],MID[1]);c.rotate(Math.atan2(AXIS[1],AXIS[0]));
+  c.globalAlpha=o.sat?0.12:0.08;c.fillStyle=TEAMS[0].color;c.fillRect(-3000,-3000,3000,6000);c.fillStyle=TEAMS[1].color;c.fillRect(0,-3000,3000,6000);
+  c.globalAlpha=1;c.strokeStyle="rgba(255,255,255,.7)";c.setLineDash([14,10]);c.lineWidth=Math.max(2,2*o.px);
+  c.beginPath();c.moveTo(0,-3000);c.lineTo(0,3000);c.stroke();c.setLineDash([]);c.restore();
+  c.textAlign="center";c.textBaseline="middle";
+  TEAMS.forEach(tm=>{const n=N[tm.base];
+    c.fillStyle=tm.color+"33";c.strokeStyle=tm.color;c.lineWidth=Math.max(2,2.5*o.px);
+    c.beginPath();c.arc(n[0],n[1],CTF.homeR,0,7);c.fill();c.stroke();
+    c.font=`700 ${Math.max(7,12*o.px)}px "Chakra Petch",sans-serif`;c.lineWidth=3.5*o.px;c.strokeStyle="rgba(10,14,29,.9)";
+    const ly=n[1]+CTF.homeR+Math.max(10,16*o.px);c.strokeText("BASE "+tm.name.toUpperCase(),n[0],ly);c.fillStyle=tm.color;c.fillText("BASE "+tm.name.toUpperCase(),n[0],ly)});
+}
+function ctfEntities(c,o){
+  for(const p of G.players)drawRunner(c,p,o,p.bot?p.skin:skinId,TEAMS[p.team].color,p.bot?TEAMS[p.team].color:"#ffffff");
+  const fs=Math.max(1,1.5*o.px);
+  for(const f of G.flags){if(!o.vis(f.x,f.y))continue;
+    const off=f.state==="carried"?6*o.es:0;drawFlag(c,f.x+off,f.y-off,TEAMS[f.team].color,fs,o.t);
+    if(f.state==="dropped"){c.strokeStyle=TEAMS[f.team].color;c.lineWidth=2*o.px;c.beginPath();c.arc(f.x,f.y,10*fs,-Math.PI/2,-Math.PI/2+2*Math.PI*f.timer/CTF.dropTime);c.stroke()}}
+}
+function ctfScreen(c){ // edge arrow towards the current objective when it's off screen
+  const [ox,oy,col]=ctfObjective();
+  const sx=(ox-cam.x)*cam.z+W/2, sy=(oy-cam.y)*cam.z+H/2, mg=36;
+  if(sx>mg&&sx<W-mg&&sy>mg+60&&sy<H-mg)return;
+  const dx=sx-W/2,dy=sy-H/2,k=Math.min((W/2-mg)/Math.abs(dx||1e-6),(H/2-mg-30)/Math.abs(dy||1e-6));
+  const ax=W/2+dx*k,ay=H/2+dy*k+15;
+  c.save();c.translate(ax,ay);c.rotate(Math.atan2(dy,dx));c.fillStyle=col;c.shadowColor=col;c.shadowBlur=12;
+  c.beginPath();c.moveTo(16,0);c.lineTo(-8,-11);c.lineTo(-3,0);c.lineTo(-8,11);c.closePath();c.fill();c.restore();
+  const d=Math.round(dist2(entPos(G.player),[ox,oy]));c.font='700 12px "Chakra Petch",sans-serif';c.fillStyle="#eaf1ff";c.fillText(d+" m",ax-Math.sign(dx)*Math.min(30,Math.abs(dx)),ay-Math.sign(dy)*22);
+}
+function ctfMini(m,s){
+  m.strokeStyle="rgba(255,255,255,.5)";m.lineWidth=1.5/s;m.setLineDash([6/s,5/s]);m.beginPath();
+  m.moveTo(MID[0]-PERP[0]*900,MID[1]-PERP[1]*900);m.lineTo(MID[0]+PERP[0]*900,MID[1]+PERP[1]*900);m.stroke();m.setLineDash([]);
+  TEAMS.forEach(tm=>{const n=N[tm.base];m.strokeStyle=tm.color;m.lineWidth=2/s;m.beginPath();m.arc(n[0],n[1],7/s,0,7);m.stroke()});
+  for(const p of G.players){const q=entPos(p);m.globalAlpha=p.out?0.4:1;m.fillStyle=TEAMS[p.team].color;m.beginPath();m.arc(q[0],q[1],(p.bot?3.2:4.4)/s,0,7);m.fill();
+    if(!p.bot){m.strokeStyle="#fff";m.lineWidth=1.4/s;m.stroke()}}
+  m.globalAlpha=1;
+  for(const f of G.flags){m.fillStyle=TEAMS[f.team].color;m.strokeStyle="#fff";m.lineWidth=1/s;m.beginPath();m.moveTo(f.x,f.y);m.lineTo(f.x,f.y-12/s);m.lineTo(f.x+8/s,f.y-9/s);m.lineTo(f.x,f.y-6/s);m.fill();m.stroke()}
 }
 
 /* minimap */
@@ -481,39 +689,21 @@ function renderMini(){
   if(view==="sat"&&ovReady){mctx.save();mctx.transform(...SAT.overview.m);mctx.globalAlpha=.75;mctx.drawImage(ovImg,0,0);mctx.restore();
     mctx.fillStyle="rgba(10,14,29,.35)";mctx.fillRect(x0-20,y0-20,x1-x0+40,y1-y0+40)}
   mctx.strokeStyle=view==="sat"?"rgba(150,225,255,.6)":"rgba(95,212,255,.35)";mctx.lineWidth=1.2/s;mctx.stroke(pPlay);
-  mctx.fillStyle="#ffcf5a";for(const t of G.tiles)if(t.alive)mctx.fillRect(t.x-1.2/s,t.y-1.2/s,2.4/s,2.4/s);
-  for(const c of G.churros)if(c.alive){mctx.fillStyle="#ff9d3b";mctx.beginPath();mctx.arc(c.x,c.y,3.4/s,0,7);mctx.fill()}
-  for(const pg of G.pigeons){const p=pg.fly?pg.fly.p:pos(pg);mctx.fillStyle=pg.state==="fright"?"#9db4ff":"#ff5c8a";mctx.beginPath();mctx.arc(p[0],p[1],3/s,0,7);mctx.fill()}
-  const p=pos(G.player);mctx.fillStyle=SKINS[skinId].body;mctx.beginPath();mctx.arc(p[0],p[1],4.2/s,0,7);mctx.fill();
+  M().mini(mctx,s);
   mctx.strokeStyle="rgba(255,255,255,.5)";mctx.lineWidth=1/s;mctx.strokeRect(cam.x-W/cam.z/2,cam.y-H/cam.z/2,W/cam.z,H/cam.z);
 }
 
-/* ---------- loop ---------- */
-const $=id=>document.getElementById(id);
-function toast(msg){const t=$("toast");t.textContent=msg;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.opacity=0,1300)}
-function hud(){$("score").textContent=G.score;$("left").textContent=G.tiles.filter(t=>t.alive).length;$("lvl").textContent=G.level;
-  $("lives").innerHTML="<i></i>".repeat(Math.max(0,G.lives));document.documentElement.style.setProperty("--skin",SKINS[skinId].body);
-  const e=edges[G.player.e];const nm=(e.name||"").replace(/\s*\(lateral.*\)$/,"");$("where").innerHTML=nm?`Sei in <b>${nm}</b>`:"";}
-let last=performance.now();
-function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(G.state==="play") update(dt); else G.t+=dt*0.3;
-  // camera follow
-  const p=pos(G.player);cam.x+=(p[0]-cam.x)*Math.min(1,dt*6);cam.y+=(p[1]-cam.y)*Math.min(1,dt*6);
-  render();renderMini();
-  requestAnimationFrame(frame);
-}
-function update(dt){
-  G.t+=dt;
-  for(const f of G.fx)f.life-=dt*0.9;G.fx=G.fx.filter(f=>f.life>0);
+/* ---------- rules per mode ---------- */
+function chaseUpdate(dt){
   const P=G.player;
   if(P.dead>0){P.dead+=dt;if(P.dead>1.6){if(G.lives<=0){gameOver();return}resetPositions()}return}
   if(G.ready>0){G.ready-=dt;return}
+  tickDash(P,dt);
   // phases: scatter 6s, chase 20s
   G.phaseT+=dt;const cyc=G.phaseT%26;const sc=cyc<6;if(sc!==G.phaseScatter){G.phaseScatter=sc;G.pigeons.forEach(pg=>{if(pg.state==="chase"&&!pg.fly){pg.dir*=-1}})}
   if(G.fright>0){G.fright-=dt;if(G.fright<=0){G.pigeons.forEach(pg=>{if(pg.state==="fright")pg.state="chase"});G.combo=0}}
   // player
-  stepPlayer(P,speedBase()*(G.fright>0?1.08:1)*dt);
+  stepPlayer(P,speedBase()*(G.fright>0?1.08:1)*dashMult(P)*dt);
   if(P.moving)P.heading=headingOf(P);
   const pp=pos(P);
   for(const t of G.tiles){if(t.alive&&Math.abs(t.x-pp[0])<11&&Math.abs(t.y-pp[1])<11){t.alive=false;G.score+=10}}
@@ -538,6 +728,113 @@ function update(dt){
     }
   }
   if(!G.tiles.some(t=>t.alive)){levelUp()}
+}
+function ctfUpdate(dt){
+  if(G.ready>0){G.ready-=dt;return}
+  if(!G.golden){G.clock-=dt;if(G.clock<=0){G.clock=0;if(G.pts[0]!==G.pts[1]){ctfEnd();return}G.golden=true;toast("Punto d'oro: chi segna vince!")}}
+  // movement
+  for(const p of G.players){
+    tickDash(p,dt);
+    if(p.out){ // caught: walk straight back to base, wait, then rejoin
+      const B=N[TEAMS[p.team].base],o=p.out,d=dist2(B,o.p);
+      if(d>4){const v=Math.min(d,230*dt);o.h=[(B[0]-o.p[0])/d,(B[1]-o.p[1])/d];o.p=[o.p[0]+o.h[0]*v,o.p[1]+o.h[1]*v]}
+      else if((o.wait-=dt)<=0){p.out=null;placeAt(p,TEAMS[p.team].base,Math.floor(Math.random()*4));
+        Object.assign(p,{goal:null,think:0,moving:false,wp:p.role!=="def"?ctfFlank(p.team):null});p.heading=headingOf(p)}
+      continue}
+    const sp=84*(p.bot?CTF.botSpeed:1)*(p.carry?CTF.carrySlow:1)*dashMult(p)*dt;
+    if(p.bot){if((p.think-=dt)<=0){p.think=0.3;ctfThink(p)}stepAI(p,sp)}
+    else stepPlayer(p,sp);
+    if(p.moving)p.heading=headingOf(p);
+  }
+  // flags
+  for(const f of G.flags){
+    if(f.state==="carried"){const q=pos(f.carrier);f.x=q[0];f.y=q[1]}
+    if(f.state==="dropped"&&(f.timer-=dt)<=0)ctfFlagHome(f);
+  }
+  for(const p of G.players){if(p.out)continue;
+    const q=pos(p),own=G.flags[p.team],foe=G.flags[1-p.team];
+    if(foe.state!=="carried"&&dist2(q,[foe.x,foe.y])<CTF.grabR){foe.state="carried";foe.carrier=p;p.carry=foe;
+      toast(p===G.player?"Hai la bandiera! Torna alla base":p.team===G.player.team?p.name+" ha la bandiera!":"Ci hanno rubato la bandiera!")}
+    if(own.state==="dropped"&&dist2(q,[own.x,own.y])<CTF.grabR){ctfFlagHome(own);G.fx.push({x:q[0],y:q[1],txt:"SALVATA",c:TEAMS[p.team].color,life:1})}
+    if(p.carry&&dist2(q,N[TEAMS[p.team].base])<CTF.homeR){
+      if(own.state==="home"){ctfScore(p);return}
+      if(p===G.player&&G.t>G.waitMsg){toast("Prima riprendi la tua bandiera!");G.waitMsg=G.t+3}}
+  }
+  // tags: whoever is in their own half catches the intruder
+  for(let i=0;i<G.players.length;i++)for(let j=i+1;j<G.players.length;j++){
+    const a=G.players[i],b=G.players[j];if(a.team===b.team||a.out||b.out)continue;
+    const qa=pos(a),qb=pos(b);if(dist2(qa,qb)>=CTF.tagR)continue;
+    ctfTag(sideOf([(qa[0]+qb[0])/2,(qa[1]+qb[1])/2])===a.team?b:a);
+  }
+}
+function ctfFlagHome(f){const n=N[TEAMS[f.team].base];Object.assign(f,{state:"home",x:n[0],y:n[1],carrier:null,goal:null,timer:0})}
+function ctfScore(p){
+  G.pts[p.team]++;if(p===G.player)G.score++;
+  toast(`Punto ${TEAMS[p.team].name}!  ${G.pts[0]} – ${G.pts[1]}`);
+  if(G.pts[p.team]>=CTF.goal||G.golden){ctfEnd();return}
+  ctfReset();
+}
+
+const MODES={
+  chase:{
+    title:"Fuga",sub:"Raccogli le tessere, scappa dai piccioni",
+    init(){Object.assign(G,{lives:3,level:1,tiles:buildTiles(),churros:landmarks.map(l=>({...l,alive:true}))});resetPositions()},
+    hudHTML:()=>`<div class="stat"><b id="score">0</b><span>Punti</span></div>
+      <div class="stat"><b id="left">0</b><span>Tessere</span></div>
+      <div class="stat"><b id="lvl">1</b><span>Livello</span></div>
+      <div class="stat"><div id="lives"></div><span>Vite</span></div>`,
+    hud(){$("score").textContent=G.score;$("left").textContent=G.tiles.filter(t=>t.alive).length;$("lvl").textContent=G.level;
+      const l=$("lives");if(l.childElementCount!==Math.max(0,G.lives))l.innerHTML="<i></i>".repeat(Math.max(0,G.lives))},
+    hint:()=>"",
+    update:chaseUpdate,drawWorld:chaseWorld,drawEntities:chaseEntities,mini:chaseMini,
+    legend:()=>`<i style="background:#ffcf5a;transform:rotate(20deg)"></i><span>Tessere di <b>trencadís</b>: raccoglile tutte per finire il livello</span>
+      <i style="background:#d98a2b;border-radius:4px;width:20px;height:7px"></i><span><b>Churros</b> sui luoghi famosi: per qualche secondo i piccioni scappano</span>
+      <i style="background:#9aa6c2;border-radius:50%"></i><span><b>Pere, Montse, Jordi e Núria</b>: i piccioni del quartiere ti inseguono</span>`,
+    pauseText:()=>`Mancano <b>${G.tiles.filter(t=>t.alive).length}</b> tessere. Punti: <b>${G.score}</b>.`,
+  },
+  ctf:{
+    title:"Ruba bandiera",sub:"3 contro 3: Llobregat contro Besòs",
+    init(){
+      const others=Object.keys(SKINS).filter(k=>k!==skinId);
+      G.pts=[0,0];G.clock=CTF.time;G.golden=false;
+      G.players=ROSTER.map(([team,name,role],i)=>({team,name,role,bot:i>0,skin:others[i%others.length],
+        e:0,s:0,dir:1,want:[0,-1],heading:[0,-1],moving:false,dash:0,cd:0}));
+      G.player=G.players[0];ctfReset();
+    },
+    hudHTML:()=>`<div class="stat"><b id="sA" style="color:${TEAMS[0].color}">0</b><span>Llobregat</span></div>
+      <div class="stat"><b id="sB" style="color:${TEAMS[1].color}">0</b><span>Besòs</span></div>
+      <div class="stat"><b id="clock">5:00</b><span>Tempo</span></div>`,
+    hud(){$("sA").textContent=G.pts[0];$("sB").textContent=G.pts[1];
+      const c=Math.ceil(G.clock);$("clock").textContent=G.golden?"ORO":Math.floor(c/60)+":"+String(c%60).padStart(2,"0")},
+    hint(){const o=ctfObjective();return `<b style="color:${o[2]}">${o[3]}</b><br>`},
+    update:ctfUpdate,drawWorld:ctfWorld,drawEntities:ctfEntities,drawScreen:ctfScreen,mini:ctfMini,
+    legend:()=>`<i style="background:${TEAMS[0].color};border-radius:50%"></i><span>Sei <b>Kiko</b>, squadra <b>Llobregat</b> (cappellino blu), con Laia e Pau</span>
+      <i style="background:${TEAMS[1].color};clip-path:polygon(0 0,100% 50%,0 100%)"></i><span>Ruba la bandiera del <b>Besòs</b> e portala alla tua base. Vince chi fa 3 punti, o chi è avanti dopo 5 minuti</span>
+      <i style="border:2px dashed #fff;border-radius:3px"></i><span>Nella <b>tua metà</b> tocchi gli avversari e li rimandi a casa; nella loro sono loro a prendere te</span>`,
+    pauseText:()=>`Llobregat <b>${G.pts[0]}</b> – <b>${G.pts[1]}</b> Besòs.`,
+  },
+};
+
+/* ---------- loop ---------- */
+const $=id=>document.getElementById(id);
+function toast(msg){const t=$("toast");t.textContent=msg;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.opacity=0,1600)}
+function hud(){
+  M().hud();document.documentElement.style.setProperty("--skin",SKINS[skinId].body);
+  const P=G.player,k=P.cd>0?1-P.cd/DASH.cool:1;$("dashbar").firstChild.style.width=(k*100).toFixed(0)+"%";$("dashbar").classList.toggle("ready",k>=1);
+  const e=edges[P.e];const nm=(e.name||"").replace(/\s*\(lateral.*\)$/,"");$("where").innerHTML=M().hint()+(nm?`Sei in <b>${nm}</b>`:"");}
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(G.state==="play") update(dt); else G.t+=dt*0.3;
+  // camera follow
+  const p=entPos(G.player);cam.x+=(p[0]-cam.x)*Math.min(1,dt*6);cam.y+=(p[1]-cam.y)*Math.min(1,dt*6);
+  render();renderMini();
+  requestAnimationFrame(frame);
+}
+function update(dt){
+  G.t+=dt;
+  for(const f of G.fx)f.life-=dt*0.9;G.fx=G.fx.filter(f=>f.life>0);
+  M().update(dt);
   hud();
 }
 const now=()=>performance.now();
@@ -548,36 +845,46 @@ function skinButtons(){
 }
 function paintSkins(){document.querySelectorAll(".skin").forEach(b=>{const c=b.querySelector("canvas").getContext("2d");c.clearRect(0,0,92,92);drawKiko(c,46,46,[0,-1],4.2,b.dataset.skin,0,false);
   b.onclick=()=>{skinId=b.dataset.skin;try{localStorage.setItem("eix_skin",skinId)}catch(e){}document.querySelectorAll(".skin").forEach(x=>x.setAttribute("aria-pressed",x.dataset.skin===skinId));hud()}})}
-function legend(){return `<div class="legend">
-  <i style="background:#ffcf5a;transform:rotate(20deg)"></i><span>Tessere di <b>trencadís</b>: raccoglile tutte per finire il livello</span>
-  <i style="background:#d98a2b;border-radius:4px;width:20px;height:7px"></i><span><b>Churros</b> sui luoghi famosi: per qualche secondo i piccioni scappano</span>
-  <i style="background:#9aa6c2;border-radius:50%"></i><span><b>Pere, Montse, Jordi e Núria</b>: i piccioni del quartiere ti inseguono</span></div>`}
+function modeButtons(){
+  return `<div class="modes" role="group" aria-label="Scegli la modalità">${Object.entries(MODES).map(([id,m])=>`<button class="mode" type="button" data-mode="${id}" aria-pressed="${id===modeId}">${m.title}<small>${m.sub}</small></button>`).join("")}</div>`
+}
 function showMenu(){
   $("overlay").hidden=false;
   $("overlay").innerHTML=`<div class="card">
     <div class="kicker">Barcellona · Eixample · strade reali</div>
     <h1>Fuga nell'<em>Eixample</em></h1>
     <p>Corri tra Passeig de Gràcia, Casa Batlló e La Pedrera sulle vere vie della città, vista dall'alto.</p>
-    ${legend()}
+    <div><div class="kicker" style="margin-bottom:8px">Modalità</div>${modeButtons()}</div>
+    <div class="legend">${M().legend()}</div>
     <div><div class="kicker" style="margin-bottom:8px">Il tuo personaggio: Kiko</div>${skinButtons()}</div>
     <button class="play" type="button" id="go">Gioca</button>
-    <div class="keys">Frecce o <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> per muoverti, rotella o <kbd>+</kbd><kbd>−</kbd> per lo zoom, <kbd>P</kbd> pausa. Su telefono: scorri col dito o usa i tasti a schermo, due dita per lo zoom.</div>
+    <div class="keys">Frecce o <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> per muoverti, <kbd>Spazio</kbd> per lo scatto, rotella o <kbd>+</kbd><kbd>−</kbd> per lo zoom, <kbd>P</kbd> pausa. Su telefono: scorri col dito o usa i tasti a schermo, ⚡ per lo scatto, due dita per lo zoom.</div>
     ${best?`<div class="keys">Record su questo dispositivo: <b>${best}</b></div>`:""}
     <div class="keys"><kbd>V</kbd> cambia vista: foto aerea o notte.</div>
     <div class="credit">Strade © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · Foto aerea © <a href="https://www.icgc.cat/" target="_blank" rel="noopener">Institut Cartogràfic i Geològic de Catalunya</a></div>
   </div>`;
-  paintSkins();$("go").onclick=start;$("go").focus();
+  paintSkins();
+  document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{modeId=b.dataset.mode;try{localStorage.setItem("eix_mode",modeId)}catch(e){}newGame();hud();showMenu();document.querySelector(`.mode[data-mode="${modeId}"]`).focus()});
+  $("go").onclick=start;$("go").focus();
 }
-function start(){if(G.state==="over"||G.state==="menu"&&G.score>0)newGame();$("overlay").hidden=true;G.state="play";G.player.moving=true;hud()}
+function start(){if(G.state==="over"||G.played)newGame();G.played=true;$("overlay").hidden=true;G.state="play";G.player.moving=true;hud()}
 function togglePause(){if(!G)return;if(G.state==="play"){G.state="pause";$("overlay").hidden=false;
-  $("overlay").innerHTML=`<div class="card"><div class="kicker">Pausa</div><h1>Respira un attimo</h1><p>Mancano <b>${G.tiles.filter(t=>t.alive).length}</b> tessere. Punti: <b>${G.score}</b>.</p><div><div class="kicker" style="margin-bottom:8px">Cambia skin</div>${skinButtons()}</div><button class="play" type="button" id="go">Riprendi</button></div>`;
-  paintSkins();$("go").onclick=()=>{$("overlay").hidden=true;G.state="play"};$("go").focus()}
+  $("overlay").innerHTML=`<div class="card"><div class="kicker">Pausa</div><h1>Respira un attimo</h1><p>${M().pauseText()}</p><div><div class="kicker" style="margin-bottom:8px">Cambia skin</div>${skinButtons()}</div>
+    <div class="row"><button class="play" type="button" id="go">Riprendi</button><button class="btn" type="button" id="menuBtn">Menu</button></div></div>`;
+  paintSkins();$("go").onclick=()=>{$("overlay").hidden=true;G.state="play"};$("menuBtn").onclick=toMenu;$("go").focus()}
   else if(G.state==="pause"){$("overlay").hidden=true;G.state="play"}}
+function toMenu(){newGame();hud();showMenu()}
+function endCard(kicker,title,text){
+  $("overlay").hidden=false;$("overlay").innerHTML=`<div class="card"><div class="kicker">${kicker}</div><h1>${title}</h1><p>${text}</p>${skinButtons()}
+    <div class="row"><button class="play" type="button" id="go">Rigioca</button><button class="btn" type="button" id="menuBtn">Cambia modalità</button></div></div>`;
+  paintSkins();$("go").onclick=start;$("menuBtn").onclick=toMenu;$("go").focus()}
 function levelUp(){G.level++;G.score+=500;G.tiles=buildTiles();G.churros=landmarks.map(l=>({...l,alive:true}));resetPositions();toast(`Livello ${G.level}! I piccioni accelerano`);}
 function gameOver(){G.state="over";if(G.score>best){best=G.score;try{localStorage.setItem("eix_best",best)}catch(e){}}
-  $("overlay").hidden=false;$("overlay").innerHTML=`<div class="card"><div class="kicker">Partita finita</div><h1>I piccioni hanno <em>vinto</em></h1>
-  <p>Hai fatto <b>${G.score}</b> punti e sei arrivato al livello <b>${G.level}</b>. Record: <b>${best}</b>.</p>${skinButtons()}<button class="play" type="button" id="go">Rigioca</button></div>`;
-  paintSkins();$("go").onclick=start;$("go").focus()}
+  endCard("Partita finita","I piccioni hanno <em>vinto</em>",`Hai fatto <b>${G.score}</b> punti e sei arrivato al livello <b>${G.level}</b>. Record: <b>${best}</b>.`)}
+function ctfEnd(){G.state="over";const [a,b]=G.pts,won=a>b;let wins=0;
+  try{wins=(+localStorage.getItem("eix_ctf_wins")||0)+(won?1:0);localStorage.setItem("eix_ctf_wins",wins)}catch(e){}
+  endCard("Ruba bandiera",won?"Vince il <em>Llobregat</em>!":"Vince il <em>Besòs</em>",
+    `Llobregat <b>${a}</b> – <b>${b}</b> Besòs. Hai portato a casa <b>${G.score}</b> bandiere tu. Vittorie su questo dispositivo: <b>${wins}</b>.`)}
 
 newGame();hud();showMenu();requestAnimationFrame(frame);
 </script>
